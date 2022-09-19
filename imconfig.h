@@ -125,5 +125,8 @@ namespace ImGui
     // attach combo box to last rendered InputText
     // the InputText's label must be zero width "##name" format for ItemRectMin/Max to work
     bool BeginInputTextCombo(const char *label, ImGuiComboFlags flags = 0);
+
+    // draw debug information in the foreground drawlist
+    void DrawDebug();
 }
 
