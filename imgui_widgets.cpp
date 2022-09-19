@@ -4059,7 +4059,13 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
                 return false;
         item_status_flags = g.LastItemData.StatusFlags;
     }
-    const bool hovered = ItemHoverable(frame_bb, id);
+
+    // shrink the clickable region for combo arrow button
+    ImRect click_frame_bb = frame_bb;
+    if (flags & ImGuiInputTextFlags_ComboArrow)
+        click_frame_bb.Max.x -= GetFrameHeight();
+
+    const bool hovered = ItemHoverable(click_frame_bb, id);
     if (hovered)
         g.MouseCursor = ImGuiMouseCursor_TextInput;
 

@@ -117,9 +117,13 @@
 //#define IMGUI_DEBUG_PARANOID
 
 //---- Tip: You can add extra functions within the ImGui:: namespace, here or in your own headers files.
-/*
+
+typedef int ImGuiComboFlags;
+const int ImGuiInputTextFlags_ComboArrow        = 1 << 31;   // Make room for combo arrow button
 namespace ImGui
 {
-    void MyFunction(const char* name, const MyMatrix44& v);
+    // attach combo box to last rendered InputText
+    // the InputText's label must be zero width "##name" format for ItemRectMin/Max to work
+    bool BeginInputTextCombo(const char *label, ImGuiComboFlags flags = 0);
 }
-*/
+
