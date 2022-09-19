@@ -1592,18 +1592,37 @@ bool ImGui::BeginCombo(const char* label, const char* preview_value, ImGuiComboF
     const ImGuiID id = window->GetID(label);
     IM_ASSERT((flags & (ImGuiComboFlags_NoArrowButton | ImGuiComboFlags_NoPreview)) != (ImGuiComboFlags_NoArrowButton | ImGuiComboFlags_NoPreview)); // Can't use both flags together
 
+    if (flags & ImGuiComboFlags_AttachInputText)
+    {
+        flags &= ~ImGuiComboFlags_NoArrowButton;
+        flags |= ImGuiComboFlags_NoPreview;
+    }
+
     const float arrow_size = (flags & ImGuiComboFlags_NoArrowButton) ? 0.0f : GetFrameHeight();
     const ImVec2 label_size = CalcTextSize(label, NULL, true);
     const float w = (flags & ImGuiComboFlags_NoPreview) ? arrow_size : CalcItemWidth();
-    const ImRect bb(window->DC.CursorPos, window->DC.CursorPos + ImVec2(w, label_size.y + style.FramePadding.y * 2.0f));
-    const ImRect total_bb(bb.Min, bb.Max + ImVec2(label_size.x > 0.0f ? style.ItemInnerSpacing.x + label_size.x : 0.0f, 0.0f));
+    ImRect bb(window->DC.CursorPos, window->DC.CursorPos + ImVec2(w, label_size.y + style.FramePadding.y * 2.0f));
+    ImRect total_bb(bb.Min, bb.Max + ImVec2(label_size.x > 0.0f ? style.ItemInnerSpacing.x + label_size.x : 0.0f, 0.0f));
+    float value_x2 = ImMax(bb.Min.x, bb.Max.x - arrow_size);
+    ImRect click_bb = bb;
+
+    if (flags & ImGuiComboFlags_AttachInputText)
+    {
+        bb = ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
+        value_x2 = ImMax(bb.Min.x, bb.Max.x - arrow_size);
+        ImRect arrow_bb(ImVec2(value_x2, bb.Min.y), bb.Max);
+        total_bb = ImRect(arrow_bb.Min, arrow_bb.Max + ImVec2(label_size.x > 0.0f ? style.ItemInnerSpacing.x + label_size.x : 0.0f, 0.0f));
+        click_bb = arrow_bb;
+        ImGui::SameLine(click_bb.Min.x);
+    }
+
     ItemSize(total_bb, style.FramePadding.y);
     if (!ItemAdd(total_bb, id, &bb))
         return false;
 
     // Open on click
     bool hovered, held;
-    bool pressed = ButtonBehavior(bb, id, &hovered, &held);
+    bool pressed = ButtonBehavior(click_bb, id, &hovered, &held);
     const ImGuiID popup_id = ImHashStr("##ComboPopup", 0, id);
     bool popup_open = IsPopupOpen(popup_id, ImGuiPopupFlags_None);
     if (pressed && !popup_open)
@@ -1614,7 +1633,6 @@ bool ImGui::BeginCombo(const char* label, const char* preview_value, ImGuiComboF
 
     // Render shape
     const ImU32 frame_col = GetColorU32(hovered ? ImGuiCol_FrameBgHovered : ImGuiCol_FrameBg);
-    const float value_x2 = ImMax(bb.Min.x, bb.Max.x - arrow_size);
     RenderNavHighlight(bb, id);
     if (!(flags & ImGuiComboFlags_NoPreview))
         window->DrawList->AddRectFilled(bb.Min, ImVec2(value_x2, bb.Max.y), frame_col, style.FrameRounding, (flags & ImGuiComboFlags_NoArrowButton) ? ImDrawFlags_RoundCornersAll : ImDrawFlags_RoundCornersLeft);

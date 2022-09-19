@@ -119,13 +119,10 @@
 //---- Tip: You can add extra functions within the ImGui:: namespace, here or in your own headers files.
 
 typedef int ImGuiComboFlags;
-const int ImGuiInputTextFlags_ComboArrow        = 1 << 31;   // Make room for combo arrow button
+const int ImGuiInputTextFlags_ComboArrow        = 1 << 31;  // Make room for combo arrow button
+const int ImGuiComboFlags_AttachInputText       = 1 << 31;  // Attach to last InputText called, the InputText label must be zero width "##name" format
 namespace ImGui
 {
-    // attach combo box to last rendered InputText
-    // the InputText's label must be zero width "##name" format for ItemRectMin/Max to work
-    bool BeginInputTextCombo(const char *label, ImGuiComboFlags flags = 0);
-
     // draw debug information in the foreground drawlist
     void DrawDebug();
 }
