@@ -3312,12 +3312,20 @@ void ImFont::AddRemapChar(ImWchar dst, ImWchar src, bool overwrite_dst)
 
 const ImFontGlyph* ImFont::FindGlyph(ImWchar c) const
 {
-    if (c >= (size_t)IndexLookup.Size)
-        return FallbackGlyph;
-    const ImWchar i = IndexLookup.Data[c];
-    if (i == (ImWchar)-1)
-        return FallbackGlyph;
-    return &Glyphs.Data[i];
+    const ImFontGlyph* result = FallbackGlyph;
+    if (c < (size_t)IndexLookup.Size)
+    {
+        const ImWchar i = IndexLookup.Data[c];
+        if (i != (ImWchar)-1)
+        {
+            result = &Glyphs.Data[i];
+        }
+    }
+
+    if (result == FallbackGlyph)
+        ImGui_MarkMissingCodepoint(c);
+
+    return result;
 }
 
 const ImFontGlyph* ImFont::FindGlyphNoFallback(ImWchar c) const

@@ -121,9 +121,14 @@
 typedef int ImGuiComboFlags;
 const int ImGuiInputTextFlags_ComboArrow        = 1 << 31;  // Make room for combo arrow button
 const int ImGuiComboFlags_AttachInputText       = 1 << 31;  // Attach to last InputText called, the InputText label must be zero width "##name" format
-namespace ImGui
-{
-    // draw debug information in the foreground drawlist
-    void DrawDebug();
-}
+
+// function called on failing to find codepoint
+extern "C" void ImGui_MarkMissingCodepointDefault(unsigned int);
+extern "C" void ImGui_MarkMissingCodepoint(unsigned int);
+
+// use default function if not defined, equivalent to gcc weak alias
+#pragma comment(linker, "/alternatename:ImGui_MarkMissingCodepoint=ImGui_MarkMissingCodepointDefault")
+
+// draw debug information in the foreground drawlist
+void ImGui_DrawDebug();
 
