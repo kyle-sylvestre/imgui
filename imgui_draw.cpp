@@ -482,7 +482,7 @@ void ImGui::StyleWin98(ImGuiStyle* dst)
     for (int i = 0; i < IM_ARRAYSIZE(run_length); i++) {
 
         int rect_id = rect_ids[i];
-        if (const ImFontAtlas::CustomRect* rect = io.Fonts->GetCustomRectByIndex(rect_id)) {
+        if (const ImFontAtlasCustomRect* rect = io.Fonts->GetCustomRectByIndex(rect_id)) {
             bool black = false;
             unsigned char* run = run_length[i];
             int run_size = 0;
