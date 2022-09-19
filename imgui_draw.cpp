@@ -449,6 +449,7 @@ void ImGui::StyleWin98(ImGuiStyle* dst)
     colors[ImGuiCol_ModalWindowDimBg]       = ImVec4(0.20f, 0.20f, 0.20f, 0.35f);
 
 
+    return;
     if (dst != NULL) return;
 
     // Fonts + Icons

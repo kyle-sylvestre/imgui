@@ -6189,9 +6189,9 @@ void ImGui::RenderWindowTitleBarContents(ImGuiWindow* window, const ImRect& titl
 #ifdef WIN98 // windows title font
     if (focused) PushStyleColor(ImGuiCol_Text, IM_COL32(255,255,255,255));
     else PushStyleColor(ImGuiCol_Text, IM_COL32(192,192,192,255));
-    ImGuiIO& io = ImGui::GetIO();
-    ImFont* font = io.Fonts->Fonts[1]; // Assume the icon font is here. pretty bad
-    PushFont(font);
+    //ImGuiIO& io = ImGui::GetIO();
+    //ImFont* font = io.Fonts->Fonts[1]; // Assume the icon font is here. pretty bad
+    //PushFont(font);
 #endif
 
     ImRect layout_r(title_bar_rect.Min.x + pad_l, title_bar_rect.Min.y, title_bar_rect.Max.x - pad_r, title_bar_rect.Max.y);
@@ -6213,7 +6213,7 @@ void ImGui::RenderWindowTitleBarContents(ImGuiWindow* window, const ImRect& titl
     RenderTextClipped(layout_r.Min, layout_r.Max, name, NULL, &text_size, style.WindowTitleAlign, &clip_r);
 
 #ifdef WIN98
-    PopFont();
+    //PopFont();
     PopStyleColor();
 #endif
 
