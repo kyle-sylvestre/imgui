@@ -3062,4 +3062,15 @@ enum ImGuiKeyModFlags_ { ImGuiKeyModFlags_None = ImGuiModFlags_None, ImGuiKeyMod
 #include "imgui_user.h"
 #endif
 
+// win32 workaround for missing printf attribute
+#if defined(IMGUI_WIN32_PRINTF_CHECK)
+#define VFMT(fmt, ...)              fmt + (0 && snprintf(NULL, 0, fmt, __VA_ARGS__)), __VA_ARGS__
+#define Text(fmt, ...)              Text( VFMT(fmt, __VA_ARGS__ ) )
+#define TextColored(col, fmt, ...)  TextColored(col, VFMT(fmt, __VA_ARGS__ ))
+#define TextDisabled(fmt, ...)      TextDisabled( VFMT(fmt, __VA_ARGS__) )
+#define TextWrapped(fmt, ...)       TextWrapped( VFMT(fmt, __VA_ARGS__) )
+#define BulletText(fmt, ...)        BulletText( VFMT(fmt, __VA_ARGS__) )
+#define LabelText(label, fmt, ...)  LabelText(label, VFMT(fmt, __VA_ARGS__))
+#endif
+
 #endif // #ifndef IMGUI_DISABLE

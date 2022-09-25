@@ -33,6 +33,16 @@ Index of this file:
 #endif
 
 #include "imgui.h"
+
+#if defined(IMGUI_WIN32_PRINTF_CHECK)
+#undef Text
+#undef TextColored
+#undef TextDisabled
+#undef TextWrapped
+#undef BulletText
+#undef LabelText
+#endif
+
 #ifndef IMGUI_DISABLE
 
 #ifndef IMGUI_DEFINE_MATH_OPERATORS
