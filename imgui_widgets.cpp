@@ -948,6 +948,9 @@ bool ImGui::ScrollbarEx(const ImRect& bb_frame, ImGuiID id, ImGuiAxis axis, ImS6
     ImRect bb = bb_frame;
     bb.Expand(ImVec2(-ImClamp(IM_FLOOR((bb_frame_width - 2.0f) * 0.5f), 0.0f, 3.0f), -ImClamp(IM_FLOOR((bb_frame_height - 2.0f) * 0.5f), 0.0f, 3.0f)));
 
+    // delay repeat + scroll arrow buttons
+    ImGui_ScrollExtra(axis, bb);
+
     // V denote the main, longer axis of the scrollbar (= height for a vertical scrollbar)
     const float scrollbar_size_v = (axis == ImGuiAxis_X) ? bb.GetWidth() : bb.GetHeight();
 
@@ -990,6 +993,14 @@ bool ImGui::ScrollbarEx(const ImRect& bb_frame, ImGuiID id, ImGuiAxis axis, ImS6
         // It is ok to modify Scroll here because we are being called in Begin() after the calculation of ContentSize and before setting up our starting position
         const float scroll_v_norm = ImSaturate((clicked_v_norm - g.ScrollbarClickDeltaToGrabCenter - grab_h_norm * 0.5f) / (1.0f - grab_h_norm));
         *p_scroll_v = (ImS64)(scroll_v_norm * scroll_max);
+
+        // snap scrolling to line boundaries
+        // TODO: window flag for this?
+        if (axis == ImGuiAxis_Y)
+        {
+            float h = ImGui::GetTextLineHeightWithSpacing();
+            *p_scroll_v = IM_FLOOR(*p_scroll_v / h) * h;
+        }
 
         // Update values for rendering
         scroll_ratio = ImSaturate((float)*p_scroll_v / (float)scroll_max);
