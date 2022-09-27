@@ -948,8 +948,8 @@ bool ImGui::ScrollbarEx(const ImRect& bb_frame, ImGuiID id, ImGuiAxis axis, ImS6
     ImRect bb = bb_frame;
     bb.Expand(ImVec2(-ImClamp(IM_FLOOR((bb_frame_width - 2.0f) * 0.5f), 0.0f, 3.0f), -ImClamp(IM_FLOOR((bb_frame_height - 2.0f) * 0.5f), 0.0f, 3.0f)));
 
-    // delay repeat + scroll arrow buttons
-    ImGui_ScrollExtra(axis, bb);
+    // delay repeat + scroll arrow buttons + page up/down on clicking scroll empty space
+    bool intercepted = ImGui_ScrollExtra(bb, id, axis, p_scroll_v, size_avail_v, size_contents_v);
 
     // V denote the main, longer axis of the scrollbar (= height for a vertical scrollbar)
     const float scrollbar_size_v = (axis == ImGuiAxis_X) ? bb.GetWidth() : bb.GetHeight();
@@ -969,7 +969,7 @@ bool ImGui::ScrollbarEx(const ImRect& bb_frame, ImGuiID id, ImGuiAxis axis, ImS6
     const ImS64 scroll_max = ImMax((ImS64)1, size_contents_v - size_avail_v);
     float scroll_ratio = ImSaturate((float)*p_scroll_v / (float)scroll_max);
     float grab_v_norm = scroll_ratio * (scrollbar_size_v - grab_h_pixels) / scrollbar_size_v; // Grab position in normalized space
-    if (held && allow_interaction && grab_h_norm < 1.0f)
+    if (!intercepted && held && allow_interaction && grab_h_norm < 1.0f)
     {
         const float scrollbar_pos_v = bb.Min[axis];
         const float mouse_pos_v = g.IO.MousePos[axis];
@@ -999,7 +999,7 @@ bool ImGui::ScrollbarEx(const ImRect& bb_frame, ImGuiID id, ImGuiAxis axis, ImS6
         if (axis == ImGuiAxis_Y)
         {
             float h = ImGui::GetTextLineHeightWithSpacing();
-            *p_scroll_v = IM_FLOOR(*p_scroll_v / h) * h;
+            *p_scroll_v = IM_ROUND(*p_scroll_v / h) * h;
         }
 
         // Update values for rendering
