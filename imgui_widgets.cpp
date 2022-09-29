@@ -999,7 +999,7 @@ bool ImGui::ScrollbarEx(const ImRect& bb_frame, ImGuiID id, ImGuiAxis axis, ImS6
         if (axis == ImGuiAxis_Y)
         {
             float h = ImGui::GetTextLineHeightWithSpacing();
-            *p_scroll_v = IM_ROUND(*p_scroll_v / h) * h;
+            *p_scroll_v = (ImS64)(IM_ROUND(*p_scroll_v / h) * h);
         }
 
         // Update values for rendering
