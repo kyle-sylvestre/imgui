@@ -4786,6 +4786,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
         }
 
         // Draw selection
+        bool has_selection = false;
         const ImVec2 draw_scroll = ImVec2(state->ScrollX, 0.0f);
         if (render_selection)
         {
@@ -4815,7 +4816,10 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
                     ImRect rect(rect_pos + ImVec2(0.0f, bg_offy_up - g.FontSize), rect_pos + ImVec2(rect_size.x, bg_offy_dn));
                     rect.ClipWith(clip_rect);
                     if (rect.Overlaps(clip_rect))
+                    {
+                        has_selection = true;
                         draw_window->DrawList->AddRectFilled(rect.Min, rect.Max, bg_color);
+                    }
                 }
                 rect_pos.x = draw_pos.x - draw_scroll.x;
                 rect_pos.y += g.FontSize;
@@ -4825,8 +4829,31 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
         // We test for 'buf_display_max_length' as a way to avoid some pathological cases (e.g. single-line 1 MB string) which would make ImDrawList crash.
         if (is_multiline || (buf_display_end - buf_display) < buf_display_max_length)
         {
+            bool draw_text = true;
             ImU32 col = GetColorU32(is_displaying_hint ? ImGuiCol_TextDisabled : ImGuiCol_Text);
-            draw_window->DrawList->AddText(g.Font, g.FontSize, draw_pos - draw_scroll, col, buf_display, buf_display_end, 0.0f, is_multiline ? NULL : &clip_rect);
+            if (has_selection)
+            {
+                size_t sel_i  = ImMin(state->Stb.select_start, state->Stb.select_end);
+                size_t sel_e  = ImMax(state->Stb.select_start, state->Stb.select_end);
+                ImU32 *cols = (ImU32 *)_malloca(sizeof(ImU32) * state->TextW.Size);
+                if (cols)
+                {
+                    draw_text = false;
+                    for (size_t i = 0; i < state->TextW.Size; i++)
+                    {
+                        if (i >= sel_i && i < sel_e)
+                            cols[i] = IM_COL32_WHITE;
+                        else
+                            cols[i] = col;
+                    }
+
+                    ImGui_AddTextColored(draw_window->DrawList, g.Font, g.FontSize, draw_pos - draw_scroll, cols, NULL, buf_display, buf_display_end, 0.0f, is_multiline ? NULL : &clip_rect);
+                    _freea(cols); cols = 0;
+                }
+            }
+
+            if (draw_text)
+                draw_window->DrawList->AddText(g.Font, g.FontSize, draw_pos - draw_scroll, col, buf_display, buf_display_end, 0.0f, is_multiline ? NULL : &clip_rect);
         }
 
         // Draw blinking cursor
