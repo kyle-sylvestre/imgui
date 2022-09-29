@@ -531,6 +531,104 @@ IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARA
     case WM_MBUTTONDOWN: case WM_MBUTTONDBLCLK:
     case WM_XBUTTONDOWN: case WM_XBUTTONDBLCLK:
     {
+        // intercept right click menu for text editing 
+        HMENU hmenu = 0;
+        if (msg == WM_RBUTTONDOWN &&
+            GetCursor() == LoadCursor(NULL, IDC_IBEAM) &&
+            0 != (hmenu = CreatePopupMenu()))
+        {
+            // click the box when hovering for paste events
+            bool was_unselected = false;
+            if (!io.WantCaptureKeyboard)
+            {
+                // TODO: prevent flicker clicking when not pasting/selecting all
+                was_unselected = true;
+                io.AddMouseButtonEvent(0, true);
+                io.AddMouseButtonEvent(0, false);
+            }
+
+            enum
+            {
+                Undo = 1,
+                Cut,
+                Copy,
+                Paste,
+                Delete,
+                Select_All,
+            };
+
+            // insert the clickable menu rows
+            UINT ex = (was_unselected) ? MF_GRAYED : 0;
+            UINT append = (UINT)-1;
+            InsertMenuW(hmenu, append, MF_BYPOSITION, Undo, L"Undo");
+            InsertMenuW(hmenu, append, ex | MF_BYPOSITION, Cut, L"Cut");
+            InsertMenuW(hmenu, append, ex | MF_BYPOSITION, Copy, L"Copy");
+            InsertMenuW(hmenu, append, MF_BYPOSITION, Paste, L"Paste");
+            InsertMenuW(hmenu, append, ex | MF_BYPOSITION, Delete, L"Delete");
+            InsertMenuW(hmenu, append, MF_BYPOSITION, Select_All, L"Select All");
+
+            POINT cursor = {};
+            GetCursorPos(&cursor);
+            SetForegroundWindow(bd->hWnd);
+
+            // present the right click menu, block until cancel/select
+            UINT sel = TrackPopupMenu(hmenu, TPM_NONOTIFY | TPM_RETURNCMD, cursor.x, cursor.y, 0, bd->hWnd, NULL);
+
+            // perform the keyboard shortcut for the action
+            switch (sel)
+            {
+                case Undo:
+                {
+                    io.AddKeyEvent(ImGuiKey_ModCtrl, true);
+                    io.AddKeyEvent(ImGuiKey_Z, true);
+                    io.AddKeyEvent(ImGuiKey_ModCtrl, false);
+                    io.AddKeyEvent(ImGuiKey_Z, false);
+                    break;
+                }
+                case Cut:
+                {
+                    io.AddKeyEvent(ImGuiKey_ModCtrl, true);
+                    io.AddKeyEvent(ImGuiKey_X, true);
+                    io.AddKeyEvent(ImGuiKey_ModCtrl, false);
+                    io.AddKeyEvent(ImGuiKey_X, false);
+                    break;
+                }
+                case Copy: 
+                {
+                    io.AddKeyEvent(ImGuiKey_ModCtrl, true);
+                    io.AddKeyEvent(ImGuiKey_C, true);
+                    io.AddKeyEvent(ImGuiKey_ModCtrl, false);
+                    io.AddKeyEvent(ImGuiKey_C, false);
+                    break;
+                }
+                case Paste:
+                {
+                    io.AddKeyEvent(ImGuiKey_ModCtrl, true);
+                    io.AddKeyEvent(ImGuiKey_V, true);
+                    io.AddKeyEvent(ImGuiKey_ModCtrl, false);
+                    io.AddKeyEvent(ImGuiKey_V, false);
+                    break;
+                }
+                case Delete:
+                {
+                    io.AddKeyEvent(ImGuiKey_Delete, true);
+                    io.AddKeyEvent(ImGuiKey_Delete, false);
+                    break;
+                }
+                case Select_All:
+                {
+                    io.AddKeyEvent(ImGuiKey_ModCtrl, true);
+                    io.AddKeyEvent(ImGuiKey_A, true);
+                    io.AddKeyEvent(ImGuiKey_ModCtrl, false);
+                    io.AddKeyEvent(ImGuiKey_A, false);
+                    break;
+                }
+            }
+
+            DestroyMenu(hmenu); hmenu = 0;
+            return 0;
+        }
+
         int button = 0;
         if (msg == WM_LBUTTONDOWN || msg == WM_LBUTTONDBLCLK) { button = 0; }
         if (msg == WM_RBUTTONDOWN || msg == WM_RBUTTONDBLCLK) { button = 1; }
