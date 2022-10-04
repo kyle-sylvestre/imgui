@@ -4168,7 +4168,9 @@ void ImGui::UpdateMouseWheel()
         if (!(window->Flags & ImGuiWindowFlags_NoScrollWithMouse) && !(window->Flags & ImGuiWindowFlags_NoMouseInputs))
         {
             float max_step = window->InnerRect.GetHeight() * 0.67f;
-            float scroll_step = ImFloor(ImMin(5 * window->CalcFontSize(), max_step));
+            float line_height = window->CalcFontSize() + g.Style.ItemSpacing.y;
+            float n = (float)ImGui_GetScrollLinesY();
+            float scroll_step = ImFloor(ImMin(n * line_height, max_step));
             SetScrollY(window, window->Scroll.y - wheel_y * scroll_step);
         }
     }
@@ -4182,7 +4184,8 @@ void ImGui::UpdateMouseWheel()
         if (!(window->Flags & ImGuiWindowFlags_NoScrollWithMouse) && !(window->Flags & ImGuiWindowFlags_NoMouseInputs))
         {
             float max_step = window->InnerRect.GetWidth() * 0.67f;
-            float scroll_step = ImFloor(ImMin(2 * window->CalcFontSize(), max_step));
+            float n = (float)ImGui_GetScrollCharsX();
+            float scroll_step = ImFloor(ImMin(n * window->CalcFontSize(), max_step));
             SetScrollX(window, window->Scroll.x - wheel_x * scroll_step);
         }
     }
