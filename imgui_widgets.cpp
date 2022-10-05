@@ -1630,6 +1630,7 @@ bool ImGui::BeginCombo(const char* label, const char* preview_value, ImGuiComboF
     if (flags & ImGuiComboFlags_AttachInputText)
     {
         bb = ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
+        bb.Max.x += arrow_size;
         value_x2 = ImMax(bb.Min.x, bb.Max.x - arrow_size);
         ImRect arrow_bb(ImVec2(value_x2, bb.Min.y), bb.Max);
         total_bb = ImRect(arrow_bb.Min, arrow_bb.Max + ImVec2(label_size.x > 0.0f ? style.ItemInnerSpacing.x + label_size.x : 0.0f, 0.0f));
@@ -4047,6 +4048,11 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
     const ImGuiID id = window->GetID(label);
     const ImVec2 label_size = CalcTextSize(label, NULL, true);
     const ImVec2 frame_size = CalcItemSize(size_arg, CalcItemWidth(), (is_multiline ? g.FontSize * 8.0f : label_size.y) + style.FramePadding.y * 2.0f); // Arbitrary default of 8 lines high for multi-line
+
+    // shrink the clickable region for combo arrow button
+    if (flags & ImGuiInputTextFlags_ComboArrow)
+        ((ImVec2 *)&frame_size)->x -= GetFrameHeight();
+
     const ImVec2 total_size = ImVec2(frame_size.x + (label_size.x > 0.0f ? style.ItemInnerSpacing.x + label_size.x : 0.0f), frame_size.y);
 
     const ImRect frame_bb(window->DC.CursorPos, window->DC.CursorPos + frame_size);
@@ -4099,12 +4105,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
         item_status_flags = g.LastItemData.StatusFlags;
     }
 
-    // shrink the clickable region for combo arrow button
-    ImRect click_frame_bb = frame_bb;
-    if (flags & ImGuiInputTextFlags_ComboArrow)
-        click_frame_bb.Max.x -= GetFrameHeight();
-
-    const bool hovered = ItemHoverable(click_frame_bb, id);
+    const bool hovered = ItemHoverable(frame_bb, id);
     if (hovered)
         g.MouseCursor = ImGuiMouseCursor_TextInput;
 
