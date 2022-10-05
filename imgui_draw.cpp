@@ -3322,7 +3322,7 @@ const ImFontGlyph* ImFont::FindGlyph(ImWchar c) const
         }
     }
 
-    if (result == FallbackGlyph)
+    if (result == FallbackGlyph && FallbackGlyph->Codepoint != c)
         ImGui_MarkMissingCodepoint(c);
 
     return result;
