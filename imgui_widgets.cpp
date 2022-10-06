@@ -1623,20 +1623,16 @@ bool ImGui::BeginCombo(const char* label, const char* preview_value, ImGuiComboF
     const ImVec2 label_size = CalcTextSize(label, NULL, true);
     const float w = (flags & ImGuiComboFlags_NoPreview) ? arrow_size : CalcItemWidth();
     ImRect bb(window->DC.CursorPos, window->DC.CursorPos + ImVec2(w, label_size.y + style.FramePadding.y * 2.0f));
-    ImRect total_bb(bb.Min, bb.Max + ImVec2(label_size.x > 0.0f ? style.ItemInnerSpacing.x + label_size.x : 0.0f, 0.0f));
-    float value_x2 = ImMax(bb.Min.x, bb.Max.x - arrow_size);
-    ImRect click_bb = bb;
-
     if (flags & ImGuiComboFlags_AttachInputText)
     {
         bb = ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
         bb.Max.x += arrow_size;
-        value_x2 = ImMax(bb.Min.x, bb.Max.x - arrow_size);
-        ImRect arrow_bb(ImVec2(value_x2, bb.Min.y), bb.Max);
-        total_bb = ImRect(arrow_bb.Min, arrow_bb.Max + ImVec2(label_size.x > 0.0f ? style.ItemInnerSpacing.x + label_size.x : 0.0f, 0.0f));
-        click_bb = arrow_bb;
-        ImGui::SameLine(click_bb.Min.x);
+        ImGui::SameLine(bb.Min.x);
     }
+
+    ImRect total_bb(bb.Min, bb.Max + ImVec2(label_size.x > 0.0f ? style.ItemInnerSpacing.x + label_size.x : 0.0f, 0.0f));
+    float value_x2 = ImMax(bb.Min.x, bb.Max.x - arrow_size);
+    ImRect click_bb = bb;
 
     ItemSize(total_bb, style.FramePadding.y);
     if (!ItemAdd(total_bb, id, &bb))
@@ -4860,12 +4856,20 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
         // Draw blinking cursor
         if (render_cursor)
         {
+            float CursorAnim = state->CursorAnim;
             state->CursorAnim += io.DeltaTime;
             bool cursor_is_visible = (!g.IO.ConfigInputTextCursorBlink) || (state->CursorAnim <= 0.0f) || ImFmod(state->CursorAnim, 1.20f) <= 0.80f;
+            bool last_is_visible = (!g.IO.ConfigInputTextCursorBlink) || (CursorAnim <= 0.0f) || ImFmod(CursorAnim, 1.20f) <= 0.80f;
             ImVec2 cursor_screen_pos = ImFloor(draw_pos + cursor_offset - draw_scroll);
             ImRect cursor_screen_rect(cursor_screen_pos.x, cursor_screen_pos.y - g.FontSize + 0.5f, cursor_screen_pos.x + 1.0f, cursor_screen_pos.y - 1.5f);
             if (cursor_is_visible && cursor_screen_rect.Overlaps(clip_rect))
+            {
                 draw_window->DrawList->AddLine(cursor_screen_rect.Min, cursor_screen_rect.GetBL(), GetColorU32(ImGuiCol_Text));
+                if (cursor_is_visible != last_is_visible)
+                {
+                    ImGui_WantRender();
+                }
+            }
 
             // Notify OS of text input position for advanced IME (-1 x offset so that Windows IME can cover our cursor. Bit of an extra nicety.)
             if (!is_readonly)
