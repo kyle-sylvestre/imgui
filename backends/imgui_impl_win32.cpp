@@ -569,10 +569,14 @@ IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARA
 
             POINT cursor = {};
             GetCursorPos(&cursor);
-            SetForegroundWindow(bd->hWnd);
+            SetForegroundWindow(hwnd);
 
             // present the right click menu, block until cancel/select
-            UINT sel = TrackPopupMenu(hmenu, TPM_NONOTIFY | TPM_RETURNCMD, cursor.x, cursor.y, 0, bd->hWnd, NULL);
+            UINT sel = TrackPopupMenu(hmenu, TPM_NONOTIFY | TPM_RETURNCMD,
+                                      cursor.x, cursor.y, 0, hwnd, NULL);
+
+            // spread out down/up events over many frames
+            io.FramesConfigInputTrickleEventQueue = 3;
 
             // perform the keyboard shortcut for the action
             switch (sel)

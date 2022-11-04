@@ -1152,6 +1152,7 @@ ImGuiIO::ImGuiIO()
     ConfigMacOSXBehaviors = false;
 #endif
     ConfigInputTrickleEventQueue = true;
+    FramesConfigInputTrickleEventQueue = 0;
     ConfigInputTextCursorBlink = true;
     ConfigWindowsResizeFromEdges = true;
     ConfigWindowsMoveFromTitleBarOnly = false;
@@ -4405,7 +4406,14 @@ void ImGui::NewFrame()
 
     // Process input queue (trickle as many events as possible)
     g.InputEventsTrail.resize(0);
-    UpdateInputEvents(g.IO.ConfigInputTrickleEventQueue);
+    bool trickle = g.IO.ConfigInputTrickleEventQueue;
+    if (g.IO.FramesConfigInputTrickleEventQueue)
+    {
+        trickle = true;
+        g.IO.FramesConfigInputTrickleEventQueue -= 1;
+    }
+
+    UpdateInputEvents(trickle);
 
     // Update keyboard input state
     UpdateKeyboardInputs();
