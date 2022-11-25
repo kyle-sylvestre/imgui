@@ -2381,9 +2381,9 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
             return false;
         }
         // Initialize helper structure for font loading and verify that the TTF/OTF data is correct
-        const int font_offset = stbtt_GetFontOffsetForIndex((unsigned char*)cfg.FontData, cfg.FontNo);
+        const int font_offset = stbtt_GetFontOffsetForIndex((unsigned char*)cfg.FontData, (size_t)cfg.FontDataSize, cfg.FontNo);
         IM_ASSERT(font_offset >= 0 && "FontData is incorrect, or FontNo cannot be found.");
-        if (!stbtt_InitFont(&src_tmp.FontInfo, (unsigned char*)cfg.FontData, font_offset))
+        if (!stbtt_InitFont(&src_tmp.FontInfo, (unsigned char*)cfg.FontData, (size_t)cfg.FontDataSize, font_offset))
             return false;
 
         // Measure highest codepoints
