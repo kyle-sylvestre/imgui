@@ -1718,7 +1718,7 @@ bool ImGui::BeginComboPopup(ImGuiID popup_id, const ImRect& bb, ImGuiComboFlags 
         // align the right side of the combo popup to dropdown arrow
         // normally it tries to render as much as possible, but
         // the best visual result is if it aligns with combo arrow
-        SetNextWindowSizeConstraints(ImVec2(w, 0.0f), ImVec2(bb.Max.x, CalcMaxPopupHeightFromItemCount(popup_max_height_in_items)));
+        SetNextWindowSizeConstraints(ImVec2(w, 0.0f), ImVec2(w, CalcMaxPopupHeightFromItemCount(popup_max_height_in_items)));
     }
 
     // This is essentially a specialized version of BeginPopupEx()
