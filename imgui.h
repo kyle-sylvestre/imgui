@@ -3063,6 +3063,9 @@ enum ImGuiKeyModFlags_ { ImGuiKeyModFlags_None = ImGuiModFlags_None, ImGuiKeyMod
 // Include imgui_user.h at the end of imgui.h (convenient for user to only explicitly include vanilla imgui.h)
 #ifdef IMGUI_INCLUDE_IMGUI_USER_H
 #include "imgui_user.h"
+// signal redrawing for rendering on events
+#ifndef IMGUI_SET_REDRAW
+#define IMGUI_SET_REDRAW() (void)0
 #endif
 
 // win32 workaround for missing printf attribute

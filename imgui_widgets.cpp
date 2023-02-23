@@ -4872,7 +4872,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
                 draw_window->DrawList->AddLine(cursor_screen_rect.Min, cursor_screen_rect.GetBL(), GetColorU32(ImGuiCol_Text));
                 if (cursor_is_visible != last_is_visible)
                 {
-                    ImGui_WantRender();
+                    IMGUI_SET_REDRAW();
                 }
             }
 
