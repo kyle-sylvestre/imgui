@@ -2073,6 +2073,7 @@ bool ImGui::DataTypeApplyFromText(const char* buf, ImGuiDataType data_type, void
 
     // Small types need a 32-bit buffer to receive the result from scanf()
     int v32 = 0;
+#pragma warning(disable:4774)
     if (sscanf(buf, format, type_info->Size >= 4 ? p_data : &v32) < 1)
         return false;
     if (type_info->Size < 4)
@@ -4843,11 +4844,12 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
             {
                 size_t sel_i  = ImMin(state->Stb.select_start, state->Stb.select_end);
                 size_t sel_e  = ImMax(state->Stb.select_start, state->Stb.select_end);
-                ImU32 *cols = (ImU32 *)_malloca(sizeof(ImU32) * state->TextW.Size);
+                //ImU32 *cols = (ImU32 *)_malloca(sizeof(ImU32) * state->TextW.Size); HACK @@@
+                ImU32 *cols = (ImU32 *)malloc(sizeof(ImU32) * state->TextW.Size);
                 if (cols)
                 {
                     draw_text = false;
-                    for (size_t i = 0; i < state->TextW.Size; i++)
+                    for (size_t i = 0; i < (size_t)state->TextW.Size; i++)
                     {
                         if (i >= sel_i && i < sel_e)
                             cols[i] = IM_COL32_WHITE;
@@ -4856,7 +4858,8 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
                     }
 
                     ImGui_AddTextColored(draw_window->DrawList, g.Font, g.FontSize, draw_pos - draw_scroll, cols, NULL, buf_display, buf_display_end, 0.0f, is_multiline ? NULL : &clip_rect);
-                    _freea(cols); cols = 0;
+                    //_freea(cols); cols = 0;
+                    free(cols); cols = 0;
                 }
             }
 
