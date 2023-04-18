@@ -1941,6 +1941,9 @@ struct ImGuiIO
     // Temporarily enable trickling for right click menu
     int         FramesConfigInputTrickleEventQueue;   
 
+    // Prevent darken/lighten with modal popups
+    bool        DisableModalDim;
+
     //------------------------------------------------------------------
     // Platform Functions
     // (the imgui_impl_xxxx backend files are setting those up for you)
