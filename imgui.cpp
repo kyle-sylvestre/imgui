@@ -4364,6 +4364,8 @@ void ImGui::NewFrame()
         g.HoveredIdNotActiveTimer = 0.0f;
     if (g.HoveredId)
         g.HoveredIdTimer += g.IO.DeltaTime;
+    if (g.HoveredIdTimer && g.HoveredIdTimer < 0.10f)
+        IMGUI_SET_REDRAW();
     if (g.HoveredId && g.ActiveId != g.HoveredId)
         g.HoveredIdNotActiveTimer += g.IO.DeltaTime;
     g.HoveredIdPreviousFrame = g.HoveredId;
@@ -9373,7 +9375,10 @@ bool ImGui::BeginPopupModal(const char* name, bool* p_open, ImGuiWindowFlags fla
 
     flags |= ImGuiWindowFlags_Popup | ImGuiWindowFlags_Modal | ImGuiWindowFlags_NoCollapse;
     const bool is_open = Begin(name, p_open, flags);
-    if (!is_open || (p_open && !*p_open)) // NB: is_open can be 'false' when the popup is completely clipped (e.g. zero size display)
+    const bool clicked_outside = ImGui::IsMouseClicked(ImGuiMouseButton_Left) &&
+                                 !ImGui::IsMouseHoveringRect(ImGui::GetWindowPos(),
+                                                             ImGui::GetWindowPos() + ImGui::GetWindowSize());
+    if (!is_open || (p_open && !*p_open) || clicked_outside) // NB: is_open can be 'false' when the popup is completely clipped (e.g. zero size display)
     {
         EndPopup();
         if (is_open)
@@ -9444,7 +9449,11 @@ bool ImGui::BeginPopupContextItem(const char* str_id, ImGuiPopupFlags popup_flag
     int mouse_button = (popup_flags & ImGuiPopupFlags_MouseButtonMask_);
     if (IsMouseReleased(mouse_button) && IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup))
         OpenPopupEx(id, popup_flags);
-    return BeginPopupEx(id, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoSavedSettings);
+
+    int flags = ImGuiWindowFlags_AlwaysAutoResize |
+                ImGuiWindowFlags_NoTitleBar |
+                ImGuiWindowFlags_NoSavedSettings;
+    return BeginPopupEx(id, flags);
 }
 
 bool ImGui::BeginPopupContextWindow(const char* str_id, ImGuiPopupFlags popup_flags)
