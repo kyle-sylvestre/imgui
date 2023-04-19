@@ -547,25 +547,15 @@ IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARA
                 io.AddMouseButtonEvent(0, false);
             }
 
-            enum
-            {
-                Undo = 1,
-                Cut,
-                Copy,
-                Paste,
-                Delete,
-                Select_All,
-            };
-
             // insert the clickable menu rows
             UINT ex = (was_unselected) ? MF_GRAYED : 0;
             UINT append = (UINT)-1;
-            InsertMenuW(hmenu, append, MF_BYPOSITION, Undo, L"Undo");
-            InsertMenuW(hmenu, append, ex | MF_BYPOSITION, Cut, L"Cut");
-            InsertMenuW(hmenu, append, ex | MF_BYPOSITION, Copy, L"Copy");
-            InsertMenuW(hmenu, append, MF_BYPOSITION, Paste, L"Paste");
-            InsertMenuW(hmenu, append, ex | MF_BYPOSITION, Delete, L"Delete");
-            InsertMenuW(hmenu, append, MF_BYPOSITION, Select_All, L"Select All");
+            InsertMenuW(hmenu, append, MF_BYPOSITION, ImGuiTextOperation_Undo, L"Undo");
+            InsertMenuW(hmenu, append, ex | MF_BYPOSITION, ImGuiTextOperation_Cut, L"Cut");
+            InsertMenuW(hmenu, append, ex | MF_BYPOSITION, ImGuiTextOperation_Copy, L"Copy");
+            InsertMenuW(hmenu, append, MF_BYPOSITION, ImGuiTextOperation_Paste, L"Paste");
+            InsertMenuW(hmenu, append, ex | MF_BYPOSITION, ImGuiTextOperation_Delete, L"Delete");
+            InsertMenuW(hmenu, append, MF_BYPOSITION, ImGuiTextOperation_SelectAll, L"Select All");
 
             POINT cursor = {};
             GetCursorPos(&cursor);
@@ -575,59 +565,7 @@ IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARA
             UINT sel = TrackPopupMenu(hmenu, TPM_NONOTIFY | TPM_RETURNCMD,
                                       cursor.x, cursor.y, 0, hwnd, NULL);
 
-            // spread out down/up events over many frames
-            io.FramesConfigInputTrickleEventQueue = 3;
-
-            // perform the keyboard shortcut for the action
-            switch (sel)
-            {
-                case Undo:
-                {
-                    io.AddKeyEvent(ImGuiKey_ModCtrl, true);
-                    io.AddKeyEvent(ImGuiKey_Z, true);
-                    io.AddKeyEvent(ImGuiKey_ModCtrl, false);
-                    io.AddKeyEvent(ImGuiKey_Z, false);
-                    break;
-                }
-                case Cut:
-                {
-                    io.AddKeyEvent(ImGuiKey_ModCtrl, true);
-                    io.AddKeyEvent(ImGuiKey_X, true);
-                    io.AddKeyEvent(ImGuiKey_ModCtrl, false);
-                    io.AddKeyEvent(ImGuiKey_X, false);
-                    break;
-                }
-                case Copy: 
-                {
-                    io.AddKeyEvent(ImGuiKey_ModCtrl, true);
-                    io.AddKeyEvent(ImGuiKey_C, true);
-                    io.AddKeyEvent(ImGuiKey_ModCtrl, false);
-                    io.AddKeyEvent(ImGuiKey_C, false);
-                    break;
-                }
-                case Paste:
-                {
-                    io.AddKeyEvent(ImGuiKey_ModCtrl, true);
-                    io.AddKeyEvent(ImGuiKey_V, true);
-                    io.AddKeyEvent(ImGuiKey_ModCtrl, false);
-                    io.AddKeyEvent(ImGuiKey_V, false);
-                    break;
-                }
-                case Delete:
-                {
-                    io.AddKeyEvent(ImGuiKey_Delete, true);
-                    io.AddKeyEvent(ImGuiKey_Delete, false);
-                    break;
-                }
-                case Select_All:
-                {
-                    io.AddKeyEvent(ImGuiKey_ModCtrl, true);
-                    io.AddKeyEvent(ImGuiKey_A, true);
-                    io.AddKeyEvent(ImGuiKey_ModCtrl, false);
-                    io.AddKeyEvent(ImGuiKey_A, false);
-                    break;
-                }
-            }
+            ImGui_ProcessTextOperation(sel);
 
             DestroyMenu(hmenu); hmenu = 0;
             return 0;
@@ -863,7 +801,7 @@ float ImGui_ImplWin32_GetDpiScaleForHwnd(void* hwnd)
 // (the Dwm* functions are Vista era functions but we are borrowing logic from GLFW)
 void ImGui_ImplWin32_EnableAlphaCompositing(void* hwnd)
 {
-#if (_WIN_VER >= _WIN32_WINNT_VISTA)
+#if (WINVER >= _WIN32_WINNT_VISTA)
     BOOL composition;
     if (FAILED(::DwmIsCompositionEnabled(&composition)) || !composition)
         return;
