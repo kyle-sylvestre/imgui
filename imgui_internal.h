@@ -1031,6 +1031,7 @@ struct IMGUI_API ImGuiInputTextState
     void        CursorAnimReset()           { CursorAnim = -0.30f; }                                   // After a user-input the cursor stays on for a while without blinking
     void        CursorClamp()               { Stb.cursor = ImMin(Stb.cursor, CurLenW); Stb.select_start = ImMin(Stb.select_start, CurLenW); Stb.select_end = ImMin(Stb.select_end, CurLenW); }
     bool        HasSelection() const        { return Stb.select_start != Stb.select_end; }
+    bool        HasSelectionAll() const     { return (Stb.select_start == 0 && Stb.select_end == CurLenW); }
     void        ClearSelection()            { Stb.select_start = Stb.select_end = Stb.cursor; }
     int         GetCursorPos() const        { return Stb.cursor; }
     int         GetSelectionStart() const   { return Stb.select_start; }

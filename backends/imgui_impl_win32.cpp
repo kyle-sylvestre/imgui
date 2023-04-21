@@ -538,24 +538,35 @@ IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARA
             0 != (hmenu = CreatePopupMenu()))
         {
             // click the box when hovering for paste events
-            bool was_unselected = false;
             if (!io.WantCaptureKeyboard)
             {
                 // TODO: prevent flicker clicking when not pasting/selecting all
-                was_unselected = true;
                 io.AddMouseButtonEvent(0, true);
                 io.AddMouseButtonEvent(0, false);
             }
 
+            bool has_selection = false;
+            bool has_undo = false;
+            bool is_all_selected = false;
+            ImGuiInputTextState *state = ImGui::GetInputTextState(ImGui::GetActiveID());
+            if (state)
+            {
+                has_selection = state->HasSelection();
+                is_all_selected = state->HasSelectionAll();
+                has_undo = (0 != state->GetUndoAvailCount());
+            }
+
             // insert the clickable menu rows
-            UINT ex = (was_unselected) ? MF_GRAYED : 0;
+            UINT ex = (!has_selection) ? MF_GRAYED : 0;
+            UINT undo_ex = (!has_undo) ? MF_GRAYED : 0;
+            UINT all_ex = (is_all_selected) ? MF_GRAYED : 0;
             UINT append = (UINT)-1;
-            InsertMenuW(hmenu, append, MF_BYPOSITION, ImGuiTextOperation_Undo, L"Undo");
+            InsertMenuW(hmenu, append, undo_ex | MF_BYPOSITION, ImGuiTextOperation_Undo, L"Undo");
             InsertMenuW(hmenu, append, ex | MF_BYPOSITION, ImGuiTextOperation_Cut, L"Cut");
             InsertMenuW(hmenu, append, ex | MF_BYPOSITION, ImGuiTextOperation_Copy, L"Copy");
             InsertMenuW(hmenu, append, MF_BYPOSITION, ImGuiTextOperation_Paste, L"Paste");
             InsertMenuW(hmenu, append, ex | MF_BYPOSITION, ImGuiTextOperation_Delete, L"Delete");
-            InsertMenuW(hmenu, append, MF_BYPOSITION, ImGuiTextOperation_SelectAll, L"Select All");
+            InsertMenuW(hmenu, append, all_ex | MF_BYPOSITION, ImGuiTextOperation_SelectAll, L"Select All");
 
             POINT cursor = {};
             GetCursorPos(&cursor);
