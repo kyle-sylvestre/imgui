@@ -1944,6 +1944,9 @@ struct ImGuiIO
     // Prevent darken/lighten with modal popups
     bool        DisableModalDim;
 
+    // win32: squelch click outside native right click menu
+    bool        ClickedOutsideContext;
+
     //------------------------------------------------------------------
     // Platform Functions
     // (the imgui_impl_xxxx backend files are setting those up for you)
