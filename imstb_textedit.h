@@ -305,6 +305,7 @@ typedef struct
    STB_TEXTEDIT_POSITIONTYPE  insert_length;
    STB_TEXTEDIT_POSITIONTYPE  delete_length;
    int                        char_storage;
+   int                        is_paste;
 } StbUndoRecord;
 
 typedef struct
@@ -314,6 +315,7 @@ typedef struct
    STB_TEXTEDIT_CHARTYPE  undo_char[STB_TEXTEDIT_UNDOCHARCOUNT];
    short undo_point, redo_point;
    int undo_char_point, redo_char_point;
+   int is_paste;
 } StbUndoState;
 
 typedef struct
@@ -1119,6 +1121,11 @@ retry:
 
 static void stb_textedit_flush_redo(StbUndoState *state)
 {
+   // clear the paste records
+   unsigned i;
+   for (i = state->redo_point; i < STB_TEXTEDIT_UNDOSTATECOUNT; i++)
+      state->undo_rec[i].is_paste = 0;
+
    state->redo_point = STB_TEXTEDIT_UNDOSTATECOUNT;
    state->redo_char_point = STB_TEXTEDIT_UNDOCHARCOUNT;
 }
@@ -1207,6 +1214,7 @@ static STB_TEXTEDIT_CHARTYPE *stb_text_createundo(StbUndoState *state, int pos, 
       return NULL;
 
    r->where = pos;
+   r->is_paste = state->is_paste;
    r->insert_length = (STB_TEXTEDIT_POSITIONTYPE) insert_len;
    r->delete_length = (STB_TEXTEDIT_POSITIONTYPE) delete_len;
 
@@ -1222,121 +1230,155 @@ static STB_TEXTEDIT_CHARTYPE *stb_text_createundo(StbUndoState *state, int pos, 
 
 static void stb_text_undo(STB_TEXTEDIT_STRING *str, STB_TexteditState *state)
 {
-   StbUndoState *s = &state->undostate;
-   StbUndoRecord u, *r;
-   if (s->undo_point == 0)
-      return;
+   int nr;
+   int was_paste = 0;
 
-   // we need to do two things: apply the undo record, and create a redo record
-   u = s->undo_rec[s->undo_point-1];
-   r = &s->undo_rec[s->redo_point-1];
-   r->char_storage = -1;
+   for (nr = 0; nr < 2; nr++)
+   {
+      StbUndoState *s = &state->undostate;
+      StbUndoRecord u, *r;
+      if (s->undo_point == 0)
+         return;
 
-   r->insert_length = u.delete_length;
-   r->delete_length = u.insert_length;
-   r->where = u.where;
+      // we need to do two things: apply the undo record, and create a redo record
+      u = s->undo_rec[s->undo_point - 1];
+      r = &s->undo_rec[s->redo_point - 1];
 
-   if (u.delete_length) {
-      // if the undo record says to delete characters, then the redo record will
-      // need to re-insert the characters that get deleted, so we need to store
-      // them.
+      if (nr && !(u.is_paste && was_paste))
+         break;
 
-      // there are three cases:
-      //    there's enough room to store the characters
-      //    characters stored for *redoing* don't leave room for redo
-      //    characters stored for *undoing* don't leave room for redo
-      // if the last is true, we have to bail
+      was_paste = u.is_paste;
 
-      if (s->undo_char_point + u.delete_length >= STB_TEXTEDIT_UNDOCHARCOUNT) {
-         // the undo records take up too much character space; there's no space to store the redo characters
-         r->insert_length = 0;
-      } else {
-         int i;
+      r->char_storage = -1;
+      r->insert_length = u.delete_length;
+      r->delete_length = u.insert_length;
+      r->where = u.where;
 
-         // there's definitely room to store the characters eventually
-         while (s->undo_char_point + u.delete_length > s->redo_char_point) {
-            // should never happen:
-            if (s->redo_point == STB_TEXTEDIT_UNDOSTATECOUNT)
-               return;
-            // there's currently not enough room, so discard a redo record
-            stb_textedit_discard_redo(s);
+      if (u.delete_length)
+      {
+// if the undo record says to delete characters, then the redo record will
+// need to re-insert the characters that get deleted, so we need to store
+// them.
+
+// there are three cases:
+//    there's enough room to store the characters
+//    characters stored for *redoing* don't leave room for redo
+//    characters stored for *undoing* don't leave room for redo
+// if the last is true, we have to bail
+
+         if (s->undo_char_point + u.delete_length >= STB_TEXTEDIT_UNDOCHARCOUNT)
+         {
+// the undo records take up too much character space; there's no space to store the redo characters
+            r->insert_length = 0;
          }
-         r = &s->undo_rec[s->redo_point-1];
+         else
+         {
+            int i;
 
-         r->char_storage = s->redo_char_point - u.delete_length;
-         s->redo_char_point = s->redo_char_point - u.delete_length;
+            // there's definitely room to store the characters eventually
+            while (s->undo_char_point + u.delete_length > s->redo_char_point)
+            {
+// should never happen:
+               if (s->redo_point == STB_TEXTEDIT_UNDOSTATECOUNT)
+                  return;
+               // there's currently not enough room, so discard a redo record
+               stb_textedit_discard_redo(s);
+            }
+            r = &s->undo_rec[s->redo_point - 1];
 
-         // now save the characters
-         for (i=0; i < u.delete_length; ++i)
-            s->undo_char[r->char_storage + i] = STB_TEXTEDIT_GETCHAR(str, u.where + i);
+            r->char_storage = s->redo_char_point - u.delete_length;
+            s->redo_char_point = s->redo_char_point - u.delete_length;
+
+            // now save the characters
+            for (i = 0; i < u.delete_length; ++i)
+               s->undo_char[r->char_storage + i] = STB_TEXTEDIT_GETCHAR(str, u.where + i);
+         }
+
+         // now we can carry out the deletion
+         STB_TEXTEDIT_DELETECHARS(str, u.where, u.delete_length);
       }
 
-      // now we can carry out the deletion
-      STB_TEXTEDIT_DELETECHARS(str, u.where, u.delete_length);
+      // check type of recorded action:
+      if (u.insert_length)
+      {
+// easy case: was a deletion, so we need to insert n characters
+         STB_TEXTEDIT_INSERTCHARS(str, u.where, &s->undo_char[u.char_storage], u.insert_length);
+         s->undo_char_point -= u.insert_length;
+      }
+
+      state->cursor = u.where + u.insert_length;
+
+      s->undo_point--;
+      s->redo_point--;
    }
-
-   // check type of recorded action:
-   if (u.insert_length) {
-      // easy case: was a deletion, so we need to insert n characters
-      STB_TEXTEDIT_INSERTCHARS(str, u.where, &s->undo_char[u.char_storage], u.insert_length);
-      s->undo_char_point -= u.insert_length;
-   }
-
-   state->cursor = u.where + u.insert_length;
-
-   s->undo_point--;
-   s->redo_point--;
 }
 
 static void stb_text_redo(STB_TEXTEDIT_STRING *str, STB_TexteditState *state)
 {
+   int nr;
+   int was_paste = 0;
    StbUndoState *s = &state->undostate;
    StbUndoRecord *u, r;
-   if (s->redo_point == STB_TEXTEDIT_UNDOSTATECOUNT)
-      return;
 
-   // we need to do two things: apply the redo record, and create an undo record
-   u = &s->undo_rec[s->undo_point];
-   r = s->undo_rec[s->redo_point];
+   for (nr = 0; nr < 2; nr++)
+   {
+      if (s->redo_point == STB_TEXTEDIT_UNDOSTATECOUNT)
+         return;
 
-   // we KNOW there must be room for the undo record, because the redo record
-   // was derived from an undo record
+      // we need to do two things: apply the redo record, and create an undo record
+      u = &s->undo_rec[s->undo_point];
+      r = s->undo_rec[s->redo_point];
 
-   u->delete_length = r.insert_length;
-   u->insert_length = r.delete_length;
-   u->where = r.where;
-   u->char_storage = -1;
+      // check if we need to do second event for pasting
+      if (nr && !(u->is_paste && was_paste))
+         break;
 
-   if (r.delete_length) {
-      // the redo record requires us to delete characters, so the undo record
-      // needs to store the characters
+      was_paste = u->is_paste;
 
-      if (s->undo_char_point + u->insert_length > s->redo_char_point) {
-         u->insert_length = 0;
-         u->delete_length = 0;
-      } else {
-         int i;
-         u->char_storage = s->undo_char_point;
-         s->undo_char_point = s->undo_char_point + u->insert_length;
+      // we KNOW there must be room for the undo record, because the redo record
+      // was derived from an undo record
 
-         // now save the characters
-         for (i=0; i < u->insert_length; ++i)
-            s->undo_char[u->char_storage + i] = STB_TEXTEDIT_GETCHAR(str, u->where + i);
+      u->delete_length = r.insert_length;
+      u->insert_length = r.delete_length;
+      u->where = r.where;
+      u->char_storage = -1;
+
+      if (r.delete_length)
+      {
+// the redo record requires us to delete characters, so the undo record
+// needs to store the characters
+
+         if (s->undo_char_point + u->insert_length > s->redo_char_point)
+         {
+            u->insert_length = 0;
+            u->delete_length = 0;
+         }
+         else
+         {
+            int i;
+            u->char_storage = s->undo_char_point;
+            s->undo_char_point = s->undo_char_point + u->insert_length;
+
+            // now save the characters
+            for (i = 0; i < u->insert_length; ++i)
+               s->undo_char[u->char_storage + i] = STB_TEXTEDIT_GETCHAR(str, u->where + i);
+         }
+
+         STB_TEXTEDIT_DELETECHARS(str, r.where, r.delete_length);
       }
 
-      STB_TEXTEDIT_DELETECHARS(str, r.where, r.delete_length);
+      if (r.insert_length)
+      {
+// easy case: need to insert n characters
+         STB_TEXTEDIT_INSERTCHARS(str, r.where, &s->undo_char[r.char_storage], r.insert_length);
+         s->redo_char_point += r.insert_length;
+      }
+
+      state->cursor = r.where + r.insert_length;
+
+      s->undo_point++;
+      s->redo_point++;
    }
-
-   if (r.insert_length) {
-      // easy case: need to insert n characters
-      STB_TEXTEDIT_INSERTCHARS(str, r.where, &s->undo_char[r.char_storage], r.insert_length);
-      s->redo_char_point += r.insert_length;
-   }
-
-   state->cursor = r.where + r.insert_length;
-
-   s->undo_point++;
-   s->redo_point++;
 }
 
 static void stb_text_makeundo_insert(STB_TexteditState *state, int where, int length)
@@ -1395,7 +1437,15 @@ static void stb_textedit_initialize_state(STB_TexteditState *state, int is_singl
 
 static int stb_textedit_paste(STB_TEXTEDIT_STRING *str, STB_TexteditState *state, STB_TEXTEDIT_CHARTYPE const *ctext, int len)
 {
-   return stb_textedit_paste_internal(str, state, (STB_TEXTEDIT_CHARTYPE *) ctext, len);
+   // if there is a selection, combine clear/insert into one sequence
+   if (state->select_start != state->select_end)
+   {
+      state->undostate.is_paste = 1;
+   }
+
+   int result = stb_textedit_paste_internal(str, state, (STB_TEXTEDIT_CHARTYPE *) ctext, len);
+   state->undostate.is_paste = 0;
+   return result;
 }
 
 #if defined(__GNUC__) || defined(__clang__)
