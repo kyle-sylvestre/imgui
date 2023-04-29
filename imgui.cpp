@@ -9375,10 +9375,7 @@ bool ImGui::BeginPopupModal(const char* name, bool* p_open, ImGuiWindowFlags fla
 
     flags |= ImGuiWindowFlags_Popup | ImGuiWindowFlags_Modal | ImGuiWindowFlags_NoCollapse;
     const bool is_open = Begin(name, p_open, flags);
-    const bool clicked_outside = ImGui::IsMouseClicked(ImGuiMouseButton_Left) &&
-                                 !ImGui::IsMouseHoveringRect(ImGui::GetWindowPos(),
-                                                             ImGui::GetWindowPos() + ImGui::GetWindowSize());
-    if (!is_open || (p_open && !*p_open) || clicked_outside) // NB: is_open can be 'false' when the popup is completely clipped (e.g. zero size display)
+    if (!is_open || (p_open && !*p_open)) // NB: is_open can be 'false' when the popup is completely clipped (e.g. zero size display)
     {
         EndPopup();
         if (is_open)
