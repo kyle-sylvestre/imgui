@@ -22,8 +22,6 @@
 
 #include <vector>
 
-#include <emmintrin.h> // SSE2
-
 #include <kbt/kbt_common.h>
 #include <kbt/kbt_platform_win32.h>
 
