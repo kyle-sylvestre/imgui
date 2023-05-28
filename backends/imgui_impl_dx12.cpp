@@ -518,6 +518,8 @@ bool    ImGui_ImplDX12_CreateDeviceObjects()
                 return false;
         }
 
+        // MinGW doesn't export this typedef anymore
+        typedef decltype(D3D12SerializeRootSignature) *PFN_D3D12_SERIALIZE_ROOT_SIGNATURE;
         PFN_D3D12_SERIALIZE_ROOT_SIGNATURE D3D12SerializeRootSignatureFn = (PFN_D3D12_SERIALIZE_ROOT_SIGNATURE)::GetProcAddress(d3d12_dll, "D3D12SerializeRootSignature");
         if (D3D12SerializeRootSignatureFn == NULL)
             return false;
