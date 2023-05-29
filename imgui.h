@@ -3091,4 +3091,18 @@ enum ImGuiKeyModFlags_ { ImGuiKeyModFlags_None = ImGuiModFlags_None, ImGuiKeyMod
 #define LabelText(label, fmt, ...)  LabelText(label, VFMT(fmt, ##__VA_ARGS__))
 #endif
 
+// print HRESULT/function name
+#if defined(KBT)
+#define IMGUI_ERROR_HR KBT_SetErrorHR
+#else
+#include <comdef.h>
+static void IMGUI_ERROR_HR(HRESULT hr, const char *name)
+{
+    _com_error err(hr);
+    fprintf(stderr, "DX11 %s: %ls", name, err.ErrorMessage());
+}
+#endif
+
+#define IMGUI_ERROR_WIN32(c, m) IMGUI_ERROR_HR(HRESULT_FROM_WIN32(c), m)
+
 #endif // #ifndef IMGUI_DISABLE

@@ -783,7 +783,6 @@ static HBITMAP g_hBitmap;
 static uint32_t* g_PixelBuffer;
 static size_t g_PixelBufferSize;
 static HBRUSH g_BackgroundColorBrush;
-static uint32_t g_BackgroundColor;
 
 bool ImGui_ImplGDI_Init()
 {
@@ -853,11 +852,17 @@ void ImGui_ImplGDI_RenderDrawData(ImDrawData* draw_data)
 
         g_hDC = GetDC(hWnd);
         if (!g_hDC)
+        {
+            IMGUI_ERROR_WIN32(GetLastError(), "GetDC");
             return;
+        }
 
         g_hBufferDC = CreateCompatibleDC(g_hDC);
         if (!g_hBufferDC)
+        {
+            IMGUI_ERROR_WIN32(GetLastError(), "CreateCompatibleDC");
             return;
+        }
 
         BITMAPINFO BitmapInfo = {};
         BitmapInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
@@ -875,7 +880,10 @@ void ImGui_ImplGDI_RenderDrawData(ImDrawData* draw_data)
             NULL,
             0);
         if (!g_hBitmap)
+        {
+            IMGUI_ERROR_WIN32(GetLastError(), "CreateDIBSection");
             return;
+        }
 
         g_PixelBufferSize = fb_width * fb_height * sizeof(uint32_t);
     }
@@ -895,7 +903,8 @@ void ImGui_ImplGDI_RenderDrawData(ImDrawData* draw_data)
         rc.bottom = fb_height;
 
         // TODO: avoid hitting DC by fill row, memcpy rows 
-        FillRect(g_hBufferDC, &rc, g_BackgroundColorBrush);
+        if (!FillRect(g_hBufferDC, &rc, g_BackgroundColorBrush))
+            IMGUI_ERROR_WIN32(GetLastError(), "FillRect");
     }
     else
     {
@@ -908,7 +917,7 @@ void ImGui_ImplGDI_RenderDrawData(ImDrawData* draw_data)
 
     imgui_sw::paint_imgui(g_PixelBuffer, fb_width, fb_height, {});
 
-    BitBlt(
+    if (!BitBlt(
         g_hDC,
         0,
         0,
@@ -917,7 +926,8 @@ void ImGui_ImplGDI_RenderDrawData(ImDrawData* draw_data)
         g_hBufferDC,
         0,
         0,
-        SRCCOPY);
+        SRCCOPY))
+        IMGUI_ERROR_WIN32(GetLastError(), "BitBlt");
 
         avg_sum += GetSecondsElapsed(pf);
         avg_num++;
