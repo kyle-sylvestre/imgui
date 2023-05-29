@@ -3092,15 +3092,17 @@ enum ImGuiKeyModFlags_ { ImGuiKeyModFlags_None = ImGuiModFlags_None, ImGuiKeyMod
 #endif
 
 // print HRESULT/function name
+#if defined(_WIN32) || defined(__MINGW32__)
 #if defined(KBT)
 #define IMGUI_ERROR_HR KBT_SetErrorHR
 #else
 #include <comdef.h>
-static void IMGUI_ERROR_HR(HRESULT hr, const char *name)
+inline void IMGUI_ERROR_HR(HRESULT hr, const char *name)
 {
     _com_error err(hr);
     fprintf(stderr, "DX11 %s: %ls", name, err.ErrorMessage());
 }
+#endif
 #endif
 
 #define IMGUI_ERROR_WIN32(c, m) IMGUI_ERROR_HR(HRESULT_FROM_WIN32(c), m)
