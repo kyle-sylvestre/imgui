@@ -1627,7 +1627,7 @@ bool ImGui::BeginCombo(const char* label, const char* preview_value, ImGuiComboF
     {
         bb = ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
         bb.Max.x += arrow_size;
-        ImGui::SameLine(bb.Min.x);
+        ImGui::SameLine(bb.Min.x - window->Pos.x);
     }
 
     ImRect total_bb(bb.Min, bb.Max + ImVec2(label_size.x > 0.0f ? style.ItemInnerSpacing.x + label_size.x : 0.0f, 0.0f));
