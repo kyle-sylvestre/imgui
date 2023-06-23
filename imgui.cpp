@@ -1151,9 +1151,18 @@ ImGuiIO::ImGuiIO()
 #else
     ConfigMacOSXBehaviors = false;
 #endif
+
     ConfigInputTrickleEventQueue = true;
     FramesConfigInputTrickleEventQueue = 0;
     ConfigInputTextCursorBlink = true;
+    InputTextUndo = "Undo";
+    InputTextCut = "Cut";
+    InputTextCopy = "Copy";
+    InputTextPaste = "Paste";
+    InputTextDelete = "Delete";
+    InputTextSelectAll = "Select All";
+
+
     ConfigWindowsResizeFromEdges = true;
     ConfigWindowsMoveFromTitleBarOnly = false;
     ConfigMemoryCompactTimer = 60.0f;

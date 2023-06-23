@@ -1947,6 +1947,14 @@ struct ImGuiIO
     // win32: squelch click outside native right click menu
     bool        ClickedOutsideContext;
 
+    // InputText right click menu entries for localization
+    const char *InputTextUndo;                  // = "Undo"
+    const char *InputTextCut;                   // = "Cut"
+    const char *InputTextCopy;                  // = "Copy"
+    const char *InputTextPaste;                 // = "Paste"
+    const char *InputTextDelete;                // = "Delete"
+    const char *InputTextSelectAll;             // = "Select All"
+
     //------------------------------------------------------------------
     // Platform Functions
     // (the imgui_impl_xxxx backend files are setting those up for you)

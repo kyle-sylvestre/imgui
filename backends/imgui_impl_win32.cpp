@@ -561,12 +561,20 @@ IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARA
             UINT undo_ex = (!has_undo) ? MF_GRAYED : 0;
             UINT all_ex = (is_all_selected) ? MF_GRAYED : 0;
             UINT append = (UINT)-1;
-            InsertMenuW(hmenu, append, undo_ex | MF_BYPOSITION, ImGuiTextOperation_Undo, L"Undo");
-            InsertMenuW(hmenu, append, ex | MF_BYPOSITION, ImGuiTextOperation_Cut, L"Cut");
-            InsertMenuW(hmenu, append, ex | MF_BYPOSITION, ImGuiTextOperation_Copy, L"Copy");
-            InsertMenuW(hmenu, append, MF_BYPOSITION, ImGuiTextOperation_Paste, L"Paste");
-            InsertMenuW(hmenu, append, ex | MF_BYPOSITION, ImGuiTextOperation_Delete, L"Delete");
-            InsertMenuW(hmenu, append, all_ex | MF_BYPOSITION, ImGuiTextOperation_SelectAll, L"Select All");
+
+            WideString undo = GetUTF16(io.InputTextUndo);
+            WideString cut = GetUTF16(io.InputTextCut);
+            WideString copy = GetUTF16(io.InputTextCopy);
+            WideString paste = GetUTF16(io.InputTextPaste);
+            WideString del = GetUTF16(io.InputTextDelete);
+            WideString select_all = GetUTF16(io.InputTextSelectAll);
+
+            InsertMenuW(hmenu, append, undo_ex | MF_BYPOSITION, ImGuiTextOperation_Undo, undo.c_str());
+            InsertMenuW(hmenu, append, ex | MF_BYPOSITION, ImGuiTextOperation_Cut, cut.c_str());
+            InsertMenuW(hmenu, append, ex | MF_BYPOSITION, ImGuiTextOperation_Copy, copy.c_str());
+            InsertMenuW(hmenu, append, MF_BYPOSITION, ImGuiTextOperation_Paste, paste.c_str());
+            InsertMenuW(hmenu, append, ex | MF_BYPOSITION, ImGuiTextOperation_Delete, del.c_str());
+            InsertMenuW(hmenu, append, all_ex | MF_BYPOSITION, ImGuiTextOperation_SelectAll, select_all.c_str());
 
             POINT cursor = {};
             GetCursorPos(&cursor);
