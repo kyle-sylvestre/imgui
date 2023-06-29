@@ -1955,6 +1955,9 @@ struct ImGuiIO
     const char *InputTextDelete;                // = "Delete"
     const char *InputTextSelectAll;             // = "Select All"
 
+    // Maximum paste size allowed before replaced with error message
+    int         MaximumPasteSize;
+
     //------------------------------------------------------------------
     // Platform Functions
     // (the imgui_impl_xxxx backend files are setting those up for you)

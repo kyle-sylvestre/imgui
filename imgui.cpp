@@ -1161,6 +1161,7 @@ ImGuiIO::ImGuiIO()
     InputTextPaste = "Paste";
     InputTextDelete = "Delete";
     InputTextSelectAll = "Select All";
+    MaximumPasteSize = INT_MAX;
 
 
     ConfigWindowsResizeFromEdges = true;

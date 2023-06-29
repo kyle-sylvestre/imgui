@@ -4475,10 +4475,23 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
             if (const char* clipboard = GetClipboardText())
             {
                 // Filter pasted buffer
-                const int clipboard_len = (int)strlen(clipboard);
+                char errbuf[256] = {};
+                const size_t len = strlen(clipboard);
+                int clipboard_len = 0;
+                if (len <= io.MaximumPasteSize)
+                {
+                    clipboard_len = (int)len;
+                }
+                else
+                {
+                    // substitute huge pastes with error, can't render them anyways
+                    snprintf(errbuf, sizeof(errbuf), "Paste Error: Max: %d, Received: %zu", io.MaximumPasteSize, len);
+                    clipboard = errbuf;
+                    clipboard_len = (int)strlen(errbuf);
+                }
                 ImWchar* clipboard_filtered = (ImWchar*)IM_ALLOC((clipboard_len + 1) * sizeof(ImWchar));
                 int clipboard_filtered_len = 0;
-                for (const char* s = clipboard; *s; )
+                for (const char* s = clipboard; s - clipboard < clipboard_len; )
                 {
                     unsigned int c;
                     s += ImTextCharFromUtf8(&c, s, NULL);
