@@ -946,7 +946,11 @@ bool ImGui::ScrollbarEx(const ImRect& bb_frame, ImGuiID id, ImGuiAxis axis, ImS6
     const bool allow_interaction = (alpha >= 1.0f);
 
     ImRect bb = bb_frame;
-    bb.Expand(ImVec2(-ImClamp(IM_FLOOR((bb_frame_width - 2.0f) * 0.5f), 0.0f, 3.0f), -ImClamp(IM_FLOOR((bb_frame_height - 2.0f) * 0.5f), 0.0f, 3.0f)));
+    {
+        const float x = -ImClamp(IM_FLOOR((bb_frame_width - 2.0f) * 0.5f), 0.0f, 3.0f);
+        const float y = -ImClamp(IM_FLOOR((bb_frame_height - 2.0f) * 0.5f), 0.0f, 3.0f);
+        bb.Expand(ImVec2(-1, -1));
+    }
 
     // delay repeat + scroll arrow buttons + page up/down on clicking scroll empty space
     bool intercepted = ImGui_ScrollExtra(bb, id, axis, p_scroll_v, size_avail_v, size_contents_v);
