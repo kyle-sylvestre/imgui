@@ -1956,7 +1956,7 @@ struct ImGuiIO
     const char *InputTextSelectAll;             // = "Select All"
 
     // Maximum paste size allowed before replaced with error message
-    int         MaximumPasteSize;
+    size_t      MaximumPasteSize;
 
     //------------------------------------------------------------------
     // Platform Functions

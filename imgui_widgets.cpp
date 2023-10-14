@@ -947,8 +947,8 @@ bool ImGui::ScrollbarEx(const ImRect& bb_frame, ImGuiID id, ImGuiAxis axis, ImS6
 
     ImRect bb = bb_frame;
     {
-        const float x = -ImClamp(IM_FLOOR((bb_frame_width - 2.0f) * 0.5f), 0.0f, 3.0f);
-        const float y = -ImClamp(IM_FLOOR((bb_frame_height - 2.0f) * 0.5f), 0.0f, 3.0f);
+        //const float x = -ImClamp(IM_FLOOR((bb_frame_width - 2.0f) * 0.5f), 0.0f, 3.0f);
+        //const float y = -ImClamp(IM_FLOOR((bb_frame_height - 2.0f) * 0.5f), 0.0f, 3.0f);
         bb.Expand(ImVec2(-1, -1));
     }
 
@@ -4489,7 +4489,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
                 else
                 {
                     // substitute huge pastes with error, can't render them anyways
-                    snprintf(errbuf, sizeof(errbuf), "Paste Error: Max: %d, Received: %zu", io.MaximumPasteSize, len);
+                    snprintf(errbuf, sizeof(errbuf), "Paste Error: Max: %zu, Received: %zu", io.MaximumPasteSize, len);
                     clipboard = errbuf;
                     clipboard_len = (int)strlen(errbuf);
                 }
