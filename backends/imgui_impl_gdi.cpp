@@ -25,6 +25,13 @@
 #include <kbt/kbt_common.h>
 #include <kbt/kbt_platform_win32.h>
 
+// color format of screen HBITMAP
+#define GDI_COL32_R_SHIFT    16
+#define GDI_COL32_G_SHIFT    8
+#define GDI_COL32_B_SHIFT    0
+#define GDI_COL32_A_SHIFT    24
+
+
 // ****************************************************************************
 
 // By Emil Ernerfeldt 2018
@@ -92,15 +99,19 @@ struct ColorInt
 
 	explicit ColorInt(uint32_t x)
 	{
-		a = (x >> IM_COL32_A_SHIFT) & 0xFFu;
-		b = (x >> IM_COL32_B_SHIFT) & 0xFFu;
-		g = (x >> IM_COL32_G_SHIFT) & 0xFFu;
-		r = (x >> IM_COL32_R_SHIFT) & 0xFFu;
+		a = (x >> GDI_COL32_A_SHIFT) & 0xFFu;
+		b = (x >> GDI_COL32_B_SHIFT) & 0xFFu;
+		g = (x >> GDI_COL32_G_SHIFT) & 0xFFu;
+		r = (x >> GDI_COL32_R_SHIFT) & 0xFFu;
 	}
 
 	uint32_t toUint32() const
 	{
-		return (a << 24u) | (b << 16u) | (g << 8u) | r;
+        return 
+		(a << GDI_COL32_A_SHIFT) |
+		(b << GDI_COL32_B_SHIFT) |
+		(g << GDI_COL32_G_SHIFT) |
+		(r << GDI_COL32_R_SHIFT) ;
 	}
 };
 
@@ -182,19 +193,19 @@ ImVec4 color_convert_u32_to_float4(ImU32 in)
 {
 	const float s = 1.0f / 255.0f;
 	return ImVec4(
-		((in >> IM_COL32_R_SHIFT) & 0xFF) * s,
-		((in >> IM_COL32_G_SHIFT) & 0xFF) * s,
-		((in >> IM_COL32_B_SHIFT) & 0xFF) * s,
-		((in >> IM_COL32_A_SHIFT) & 0xFF) * s);
+		((in >> GDI_COL32_R_SHIFT) & 0xFF) * s,
+		((in >> GDI_COL32_G_SHIFT) & 0xFF) * s,
+		((in >> GDI_COL32_B_SHIFT) & 0xFF) * s,
+		((in >> GDI_COL32_A_SHIFT) & 0xFF) * s);
 }
 
 ImU32 color_convert_float4_to_u32(const ImVec4& in)
 {
 	ImU32 out;
-	out  = uint32_t(in.x * 255.0f + 0.5f) << IM_COL32_R_SHIFT;
-	out |= uint32_t(in.y * 255.0f + 0.5f) << IM_COL32_G_SHIFT;
-	out |= uint32_t(in.z * 255.0f + 0.5f) << IM_COL32_B_SHIFT;
-	out |= uint32_t(in.w * 255.0f + 0.5f) << IM_COL32_A_SHIFT;
+	out  = uint32_t(in.x * 255.0f + 0.5f) << GDI_COL32_R_SHIFT;
+	out |= uint32_t(in.y * 255.0f + 0.5f) << GDI_COL32_G_SHIFT;
+	out |= uint32_t(in.z * 255.0f + 0.5f) << GDI_COL32_B_SHIFT;
+	out |= uint32_t(in.w * 255.0f + 0.5f) << GDI_COL32_A_SHIFT;
 	return out;
 }
 
@@ -680,7 +691,28 @@ void paint_draw_cmd(
 void paint_draw_list(const PaintTarget& target, const ImDrawList* cmd_list, const SwOptions& options, Stats* stats)
 {
 	const ImDrawIdx* idx_buffer = &cmd_list->IdxBuffer[0];
-	const ImDrawVert* vertices = cmd_list->VtxBuffer.Data;
+	ImDrawVert* vertices = cmd_list->VtxBuffer.Data;
+
+    // convert imgui format to match GDI HBTIMAP format
+#if GDI_COL32_R_SHIFT != IM_COL32_R_SHIFT || \
+    GDI_COL32_G_SHIFT != IM_COL32_G_SHIFT || \
+    GDI_COL32_B_SHIFT != IM_COL32_B_SHIFT || \
+    GDI_COL32_A_SHIFT != IM_COL32_A_SHIFT
+    for (size_t i = 0; i < cmd_list->VtxBuffer.Size; i++)
+    {
+        ImU32 &col = cmd_list->VtxBuffer.Data[i].col;
+
+        ImU32 r = (col >> IM_COL32_R_SHIFT) & 0xFFu;
+        ImU32 g = (col >> IM_COL32_G_SHIFT) & 0xFFu;
+        ImU32 b = (col >> IM_COL32_B_SHIFT) & 0xFFu;
+        ImU32 a = (col >> IM_COL32_A_SHIFT) & 0xFFu;
+
+        col = (a << GDI_COL32_A_SHIFT) |
+		      (b << GDI_COL32_B_SHIFT) |
+		      (g << GDI_COL32_G_SHIFT) |
+		      (r << GDI_COL32_R_SHIFT) ;
+    }
+#endif
 
 	for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.size(); cmd_i++)
 	{
@@ -911,10 +943,6 @@ void ImGui_ImplGDI_RenderDrawData(ImDrawData* draw_data)
         memset(g_PixelBuffer, 0, g_PixelBufferSize);
     }
 
-    static float avg_sum;
-    static uint64 avg_num;
-    uint64 pf = OS_GetPerformanceCounter();
-
     imgui_sw::paint_imgui(g_PixelBuffer, fb_width, fb_height, {});
 
     if (!BitBlt(
@@ -927,12 +955,9 @@ void ImGui_ImplGDI_RenderDrawData(ImDrawData* draw_data)
         0,
         0,
         SRCCOPY))
+    {
         IMGUI_ERROR_WIN32(GetLastError(), "BitBlt");
-
-        avg_sum += GetSecondsElapsed(pf);
-        avg_num++;
-        float avg = (avg_sum / avg_num);
-        avg = avg;
+    }
 
     SelectObject(g_hBufferDC, hOldBitmap);
 }
