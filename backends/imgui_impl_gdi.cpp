@@ -698,7 +698,7 @@ void paint_draw_list(const PaintTarget& target, const ImDrawList* cmd_list, cons
     GDI_COL32_G_SHIFT != IM_COL32_G_SHIFT || \
     GDI_COL32_B_SHIFT != IM_COL32_B_SHIFT || \
     GDI_COL32_A_SHIFT != IM_COL32_A_SHIFT
-    for (size_t i = 0; i < cmd_list->VtxBuffer.Size; i++)
+    for (int i = 0; i < cmd_list->VtxBuffer.Size; i++)
     {
         ImU32 &col = cmd_list->VtxBuffer.Data[i].col;
 
