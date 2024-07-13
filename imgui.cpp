@@ -7945,7 +7945,8 @@ void ImGui::UpdateInputEvents(bool trickle_fast_inputs)
             if (io.MouseDown[button] != e->MouseButton.Down)
             {
                 // Trickling Rule: Stop processing queued events if we got multiple action on the same button
-                if (trickle_fast_inputs && ((mouse_button_changed & (1 << button)) || mouse_wheeled))
+                // Always trickle mouse buttons, trackpads report much faster events
+                if (((mouse_button_changed & (1 << button)) || mouse_wheeled))
                     break;
                 io.MouseDown[button] = e->MouseButton.Down;
                 mouse_button_changed |= (1 << button);
