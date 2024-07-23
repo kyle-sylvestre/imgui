@@ -3116,6 +3116,13 @@ enum ImGuiKeyModFlags_ { ImGuiKeyModFlags_None = ImGuiModFlags_None, ImGuiKeyMod
   #endif
 #endif
 
+// print generic error, only used in opengl3 right now
+#if defined(Error)
+  #define IMGUI_ERROR(...) Error(__VA_ARGS__)
+#else
+  #define IMGUI_ERROR(...) fprintf(stderr, __VA_ARGS__)
+#endif
+
 #define IMGUI_ERROR_WIN32(c, m) IMGUI_ERROR_HR(HRESULT_FROM_WIN32(c), m)
 
 #endif // #ifndef IMGUI_DISABLE

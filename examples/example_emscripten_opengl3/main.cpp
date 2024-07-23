@@ -53,7 +53,7 @@ int main(int, char**)
     g_GLContext = SDL_GL_CreateContext(g_Window);
     if (!g_GLContext)
     {
-        fprintf(stderr, "Failed to initialize WebGL context!\n");
+        IMGUI_ERROR("Failed to initialize WebGL context!\n");
         return 1;
     }
     SDL_GL_SetSwapInterval(1); // Enable vsync
